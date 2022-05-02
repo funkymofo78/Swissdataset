@@ -1,0 +1,249 @@
+data()
+data(swiss)
+help(swiss)
+
+#	How many variables are there and how many observations? What type of variables are they?
+
+str(swiss)
+
+#### 47 observations and 6 variables
+#### Fertility is a continous variable
+#### The rest are all numeric variables
+#### but they are proportions
+
+# Are there any missing data or outliers. If so, how do you proceed with these?
+
+sum(is.na(swiss)) #no missing data if sum is 0, tells you how missing data points there is
+boxplot(swiss$Fertility, main="Fertility")
+print(boxplot(swiss$Fertility, main="Fertility"))
+### two outliers of provinces with lower fertility
+#not too far from the bottom wisker
+#### IQR is between 64.7 and 78.45, where describes the majority
+### of the data, median is 70.4
+
+
+# Make suitable plots for each of the variables in the data set and interpret the results.
+
+boxplot(swiss$Agriculture,swiss$Examination,
+        swiss$Education,
+        swiss$Catholic,swiss$Infant.Mortality,
+        main="Proportions",
+        names=c("Agri","Exams","Edu","Catholic",
+                "Inf.Mor"))
+print(boxplot(swiss$Agriculture,swiss$Examination,swiss$Education,
+              swiss$Catholic,swiss$Infant.Mortality,main="Proportions",
+              names=c("Agri","Exams","Edu","Catholic","Inf.Mor")))
+
+x<-print(boxplot(swiss$Agriculture,swiss$Examination,swiss$Education,
+                 swiss$Catholic,swiss$Infant.Mortality,main="Proportions",
+                 names=c("Agri","Exams","Edu","Catholic","Inf.Mor")))
+x$stats
+###Education has at least 4 outliers showing a skewed dist
+###Infant mortality has one outlier not too far from the 
+#bottom wisker
+
+####going to leave in outliers(all plausiable)
+##but treat them with care
+
+####all of the variables seem to be different,
+###roughly normal dist for:
+##fertility 
+##examination
+###infant mortality
+
+hist(swiss$Examination)
+qqnorm(swiss$Examination)
+hist(swiss$Agriculture)
+hist(swiss$Infant.Mortality)
+hist(swiss$Catholic)
+###
+### Agri and Catholic have larger spreads
+### IQR for Agri is (35.9, 67.65)
+### IQR for Exam is (12, 22)
+### IQR for Edu is (6, 12)
+### IQR for Catholic is (5.2, 93.2)
+### IQR for Inf.Mor is (18.15, 21.70)
+
+###
+
+hist(swiss$Fertility)
+###looks to be normally distributed
+hist(swiss$Agriculture)
+
+###looks to not have a normally distributed and to have a large 
+### spread with some provinces having very small prop. of
+### males working in agriculture, with others having 
+###very high close to 100%
+
+hist(swiss$Examination)
+###not as large of spread as previous and data looks more 
+###symmetric (normal)
+hist(swiss$Education)
+####skewed to the right - most provinces have a low proportion of
+### people continuing past primary education
+hist(swiss$Catholic)
+####very large spread with most provinces either having a high 
+#### proportion of catholics or a low proportion of catholics
+### bimodal
+hist(swiss$Infant.Mortality)
+####normally distributed
+
+# Report some descriptive statistics for each of the variables. 
+
+summary(swiss)
+sd(swiss$Fertility)
+
+sd(swiss$Examination)
+
+sd(swiss$Infant.Mortality)
+
+####Mean of fertility is 70 (and so is the median), sd 12.5
+####Agri mean is 50.66% and median 54.10%, IQR (35.9,67.65) 
+### mean of exams is 16.5%, sd 7.977883
+### education median is 8%, IQR (6%, 12%) but has a max 53%
+### Catholic median is 15%, IQR (5.2, 93.2)
+#### inf mor mean and median is 20%, sd 2.9%
+
+
+#Investigate if any the numerical variables seem to have a linear relationship by producing scatterplots.
+pairs(swiss)
+
+pairs(swiss, panel = panel.smooth)
+### adding a line of fit using panel.smooth, and col to seperate 
+### Catholic groups
+
+pairs(swiss, panel = panel.smooth, col = 3+(swiss$Catholic > 50))
+
+plot(swiss$Fertility~swiss$Education)
+###linear relationship between:
+### fert agri positive
+#### fert exam negative
+### fert edu negative bit curved
+### slight fert inf mort
+### agri exam negative
+### agri edu negative curved
+### exam and educ postive curved
+###looks like differences between the catholic and protestant for 
+####fert and exam  in particular
+
+
+#With those that do show signs of a linear relationship, calculate their Pearson correlations using the function cor.test.
+
+cor(swiss)
+cor.test(swiss$Fertility,swiss$Agriculture)
+#weak pos relationship but significant
+cor.test(swiss$Fertility,swiss$Examination)
+#mod strong neg relationship (and significant p-value<0.05)
+cor.test(swiss$Fertility,swiss$Education,method = "spearman")
+#weak negative relationship
+cor.test(swiss$Fertility,swiss$Catholic)
+#no appropriate but R still produces the result
+cor.test(swiss$Fertility,swiss$Infant.Mortality)
+#weak positive rel (and significant)
+cor.test(swiss$Agriculture,swiss$Examination)
+cor.test(swiss$Agriculture,swiss$Education,method = "spearman")
+cor.test(swiss$Examination,swiss$Education,method = "spearman")
+cor.test(swiss$Catholic,swiss$Examination,method = "spearman")
+#cor.test(swiss$Catholic,swiss$Infant.Mortality)
+###no relationship with catholic and infant mortality
+
+
+#What is the response variable and the research question of interest?
+####Response variable is Fertility, the research question is
+#### about what socio-econmoics factors influence fertility
+
+
+#Fit a simple linear regression for the variable you think most suitable for predicting the response variable. Comment on whether the assumptions are satisfied,
+#interpretation of the results and the fit of the model.
+#### Based on plots and correlations going to fit a simple linear
+#### regression between fertility and Examination
+### as highest correlation with a linear relationship 
+
+fit_fert_exam<-lm(Fertility~Examination,data=swiss)
+
+par(mfrow=c(2,1))
+plot(fit_fert_exam,which=1:2)
+####random scatter, resdiuals are iid
+### variance of resdiuals seems to equal across fitted values
+##normality looks good here
+
+summary(fit_fert_exam)
+
+####equation is: Fertility = 86.8185 - 1.0113 * Examination
+#### slope means there is a decrease of 1 in the fertility
+###measure for prov 1% increase in examinations
+##Ho: no relationship between fert and exam
+#p-value:9.45e-07 <0.05, so sig. rel between 2 variables
+
+
+### R-squared 41.72%, 41.72% of the variation in Fertility 
+### being explained by this model (Examination)
+### slope is signifcant with p-value of 9.45e-07 (<0.05),
+### therefore reject Ho: slope (b) =0, and conclude there is a
+#### significant linear relationship between fertility and 
+### examination
+
+#Fit the full multiple linear regression model including all numerical variables. Comment on whether the assumptions are satisfied, 
+#interpretation of the results and the fit of the model.
+#Assess the added variables plots by using the command avPlots (requires car package). Interpret these plots
+#Assess any influential data points by examining the Cooks distance plots in R.
+
+fit_full<-lm(Fertility~Agriculture+Examination+Education+
+               Catholic+Infant.Mortality,data=swiss)
+
+#happy all variables bar catholic have a linear relationship with fertility
+#multicollinearoty potentially violated aswell with argi, exam and educ 
+#seem to have relationship with each other
+
+par(mfrow=c(2,1))
+plot(fit_full,which=1:2)
+####random scatter, resdiuals are iid
+### variance of resdiuals seems to equal across fitted values
+##there is one point further away then the rest
+###normality looks good here
+
+summary(fit_full)
+
+####equation is: 
+#Est(Fertility) = 66.91518 -0.17211*Agriculture
+#- 0.25801 * Examination -0.87094*Education +
+#0.10412*Catholic  +1.07705*Infant.Mortality 
+#Fert on average will decrease by 0.17211 for every one percent increase
+#Agri, keeping all variables the same
+### R-squared 70.67%, 70.67% of the variation in Fertility 
+### being explained by this model, adjusted R-squared is  0.671 
+#### much higher than simple linear regression model
+### residual standard error lower to at 7.165
+### signifcant relationships between fertility and the following:
+### Argiculture
+### Education
+### CAtholic
+### Infant mortality 
+# install.packages("car")
+library(car)
+require(car)
+avPlots(fit_full)
+#we can see from the avPlots when accounting for all other 
+#indep. variables Examination seems to explain very little 
+#about the fertility, which is interesting as we saw that
+#it was correlated with agriculture and education who are both
+#present in the model, so voliating the multicolinearity assumption
+#therefore since these parameters are present in the model they are explaining
+#how examination affects fertility due to this correlation.
+
+#lm_exam<-lm(Examination~Education+Agriculture,data=swiss)
+#lm_exam<-lm(Examination~Agriculture,data=swiss)
+
+#summary(lm_exam)
+#cooks distance
+
+dev.off()
+plot(fit_full)
+plot(fit_full,which=5)
+plot(fit_full,which=4)
+
+
+#there are some high leverage values but with low residual values
+#so therefore no high cooks distance values so no influential data points
+# so none of the outliers shown in boxplots seem to be an issue for this 
+#regression
